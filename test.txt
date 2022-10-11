@@ -1,1 +1,65 @@
-Thỳ Linh nè
+Sub Test()
+    Dim i As Integer: i = 2
+    Dim xRg As Range
+    Dim xStr As String
+    Dim xFd As FileDialog
+    Dim xFileName As String
+    Dim xFileNum As Long
+    Dim RegExp As Object
+    Dim folderPath As String
+    Set xFd = Application.FileDialog(msoFileDialogFolderPicker)
+    If xFd.Show = -1 Then
+        folderPath = xFd.SelectedItems(1) & Application.PathSeparator
+        Set xRg = Range("A1")
+        Range("A:B").ClearContents
+        Range("A1:B1").Font.Bold = True
+        xRg = "File Name"
+        xRg.Offset(0, 1) = "Page"
+        
+        
+        Count_pages (folderPath)
+    End If
+End Sub
+
+Sub Count_pages(ByVal folderPath As String)
+'    Dim AcroDoc As Object
+    Dim objWrd As Object
+    Dim objDoc As Object
+    Dim pageNum As Integer
+    Dim fileDPath
+    Dim myFolder, myFile, mySubFolder
+    Dim fileSystem As Object
+    Dim i As Integer
+    i = Application.WorksheetFunction.CountA(Range("A:A")) + 1
+    Set fileSystem = CreateObject("Scripting.FileSystemObject")
+    Set myFolder = fileSystem.GetFolder(folderPath)
+'
+    
+    For Each myFile In myFolder.Files
+'        Set fileDPath = myFile.Path & myFile.Name
+'        If myFile.Name = Dir(myFile.Path & "*.pdf", vbDirectory) Then
+'            Set AcroDoc = New AcroPDDoc
+'            AcroDoc.Open (myFile.Path & myFile.Name)
+'            Set pageNum = AcroDoc.GetNumPages
+'            AcroDoc.Close
+'            Range("A" & i) = myFile.Name
+'            Range("B" & i) = pageNum
+'            i = i + 1
+'        End If
+        If myFile Like "*.docx" Then
+            Set objWrd = CreateObject("Word.Application")
+            objWrd.Visible = False
+            Set objDoc = objWrd.documents.Open(myFile.Path)
+            Set pageNume = objDoc.ComputeStatistics(wdStatisticPages)
+            objDoc.Close
+            Range("A" & i) = myFile.Name
+            Range("B" & i) = pageNum
+            i = i + 1
+        End If
+    Next myFile
+    
+    For Each mySubFolder In myFolder.SubFolders
+        Count_pages (mySubFolder.Path)
+    Next mySubFolder
+    
+End Sub
