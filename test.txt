@@ -23,9 +23,8 @@ End Sub
 
 Sub Count_pages(ByVal folderPath As String)
 '    Dim AcroDoc As Object
-    Dim objWrd As Object
-    Dim objDoc As Object
-    Dim pageNum As Integer
+    Dim PrevDispAlerts As Boolean
+    Dim pageNume As Integer
     Dim fileDPath
     Dim myFolder, myFile, mySubFolder
     Dim fileSystem As Object
@@ -33,10 +32,9 @@ Sub Count_pages(ByVal folderPath As String)
     i = Application.WorksheetFunction.CountA(Range("A:A")) + 1
     Set fileSystem = CreateObject("Scripting.FileSystemObject")
     Set myFolder = fileSystem.GetFolder(folderPath)
-'
+    Set objWrd = CreateObject("Word.Application")
     
     For Each myFile In myFolder.Files
-'        Set fileDPath = myFile.Path & myFile.Name
 '        If myFile.Name = Dir(myFile.Path & "*.pdf", vbDirectory) Then
 '            Set AcroDoc = New AcroPDDoc
 '            AcroDoc.Open (myFile.Path & myFile.Name)
@@ -47,13 +45,23 @@ Sub Count_pages(ByVal folderPath As String)
 '            i = i + 1
 '        End If
         If myFile Like "*.docx" Then
-            Set objWrd = CreateObject("Word.Application")
-            objWrd.Visible = False
-            Set objDoc = objWrd.documents.Open(myFile.Path)
-            Set pageNume = objDoc.ComputeStatistics(wdStatisticPages)
-            objDoc.Close
+            Set wD = CreateObject("Word.Application")
+            Set mydoc = wD.Documents.Open(myFile.Path)
+            wD.Visible = True
+            wD.Activate
+            PrevDispAlerts = Application.DisplayAlerts
+            Application.DisplayAlerts = False
+            mydoc.Characters.last.Select        ' move to end of document
+            wD.Selection.Collapse               ' collapse selection at end
+            pageNume = wD.Selection.Range.Information(wdActiveEndPageNumber)
+            Application.DisplayAlerts = PrevDispAlerts
+            mydoc.Close
+            wD.Quit
+'            mydoc.Close
+            Set wD = Nothing
+            Set mydoc = Nothing
             Range("A" & i) = myFile.Name
-            Range("B" & i) = pageNum
+            Range("B" & i) = pageNume
             i = i + 1
         End If
     Next myFile
@@ -63,3 +71,4 @@ Sub Count_pages(ByVal folderPath As String)
     Next mySubFolder
     
 End Sub
+
